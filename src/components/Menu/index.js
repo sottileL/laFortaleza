@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+
 import React, { useState } from 'react'
 
 import filter from 'lodash/filter'
@@ -7,23 +9,65 @@ import join from 'lodash/join'
 
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
-import { IconButton } from '@mui/material'
+import Grid from '@mui/material/Grid'
+import IconButton from '@mui/material/IconButton'
+import MenuItem from '@mui/material/MenuItem'
+import Modal from '@mui/material/Modal'
+import Select from '@mui/material/Select'
 import { styled } from '@mui/material/styles'
+import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 
 import AddIcon from '@mui/icons-material/Add'
+import CloseIcon from '@mui/icons-material/Close'
 import RemoveIcon from '@mui/icons-material/Remove'
 
+import { Formik } from 'formik'
+import * as Yup from 'yup'
+
 import isMobile from 'is-mobile'
+import { ClickAwayListener, FormControl } from '@mui/base'
 
 const CustomTypography = styled(Typography)(() => ({
+    fontFamily: 'FS Emeric',
     color: 'orange',
     fontWeight: 700,
-    fontSize: 20,
-    marginBottom: 3,
+    fontSize: 18,
+    marginRight: 5,
     textAlign: 'center'
 
 }))
+
+const CustomButton = styled(Button)(() => ({
+    fontSize: 15,
+    backgroundColor: 'orange',
+    color: 'black',
+    marginBottom: 10,
+    textTransform: 'none',
+    fontWeight: '600',
+    width: isMobileDevice ? '90%' : '45%',
+    alignSelf: 'center',
+    border: '1px solid transparent',
+    '&:hover': { backgroundColor: 'black', color: 'orange', border: '1px solid orange' }
+}))
+
+const CssTextField = styled(TextField)({
+    '& input::placeholder': { color: 'gray' },
+    '& label.Mui-focused': { color: 'gray' },
+    '& .MuiInput-underline:after': { borderBottomColor: 'green' },
+    '& .MuiOutlinedInput-root': {
+        color: 'white',
+        '& fieldset': { borderColor: 'gray' },
+        '&:hover fieldset': { borderColor: 'white' },
+        '&.Mui-focused fieldset': { borderColor: 'white' }
+    },
+    '& .MuiInputLabel-root': { color: 'gray' }
+})
+
+const CssSelect = styled(Select)({
+    color: 'white',
+    border: '1px solid white'
+})
 
 const isMobileDevice = isMobile()
 
@@ -54,6 +98,7 @@ function ProductList () {
 
     const [cart, setCart] = useState([])
     const [finalOrder, setFinalOrder] = useState('')
+    const [openModal, setOpenModal] = useState(false)
 
     const sendOrder = () => {
         setFinalOrder(join(map(cart, item => `Name: ${item.name}, Description: ${item.description}, Price: ${item.price}`), '\n'))
@@ -72,18 +117,38 @@ function ProductList () {
         }
     }
 
-    const CustomButton = styled(Button)(() => ({
-        fontSize: 20,
-        backgroundColor: 'orange',
-        color: 'black',
-        marginBottom: 10,
-        textTransform: 'none',
-        fontWeight: '600',
-        width: isMobileDevice ? '90%' : '45%',
-        alignSelf: 'center',
-        border: '1px solid transparent',
-        '&:hover': { backgroundColor: 'black', color: 'orange', border: '1px solid orange' }
-    }))
+    const continueWithPurchase = () => {
+        setOpenModal(true)
+    }
+
+    const handleClickAway = () => {
+        console.log('clickAway')
+        if (openModal) {
+            setOpenModal(false)
+        }
+    }
+
+    const initialValues = {
+        fullName: '',
+        paymentMethod: '',
+        address: '',
+        additionalComments: ''
+    }
+
+    const validationSchema = Yup.object({
+        fullName: Yup.string().required('Requerido'),
+        paymentMethod: Yup.string().required('Requerido'),
+        address: Yup.string().required('Requerido')
+    })
+
+    const handleSubmit = (values, { setSubmitting }) => {
+        // Do something with the form values, such as submit them to a server
+        console.log(values)
+        // Set submitting to false when the submission is complete
+        setSubmitting(false)
+        // Close the modal
+        setOpenModal(false)
+    }
 
     return (
         <Box>
@@ -91,14 +156,16 @@ function ProductList () {
                 const cartItemCount = filter(cart, { id: product.id }).length
 
                 return (
-                    <Box key={product.id} sx={{ mb: 3, mt: 3 }}>
-                        <CustomTypography>
-                            {product.name}
-                        </CustomTypography>
-                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                            <CustomTypography sx={{ mr: 2 }}>
-                                ${product.price}
+                    <Grid container key={product.id} sx={{ mb: 3, mt: 3, justifyContent: 'space-around' }}>
+                        <Grid item xs={8}>
+                            <CustomTypography>
+                                {product.name}
                             </CustomTypography>
+                            <CustomTypography>
+                                    - ${product.price}
+                            </CustomTypography>
+                        </Grid>
+                        <Grid item xs={4} sx={{ display: 'flex', alignSelf: 'center' }}>
                             <IconButton sx={{
                                 backgroundColor: 'orange',
                                 color: 'black',
@@ -108,30 +175,139 @@ function ProductList () {
                             onClick={() => handleAddToCart(product)}>
                                 <AddIcon sx={{ fontSize: 'small' }}/>
                             </IconButton>
+                            <IconButton
+                                sx={{
+                                    backgroundColor: 'orange',
+                                    color: 'black',
+                                    border: '1px solid transparent',
+                                    '&:hover': { backgroundColor: 'black', color: 'orange', border: '1px solid orange' },
+                                    ml: 1
+                                }}
+                                onClick={() => handleRemoveFromCart(product)}
+                            >
+                                <RemoveIcon sx={{ fontSize: 'small' }} />
+                            </IconButton>
                             {cartItemCount > 0 && (
-                                <>
-                                    <IconButton
-                                        sx={{
-                                            backgroundColor: 'orange',
-                                            color: 'black',
-                                            border: '1px solid transparent',
-                                            '&:hover': { backgroundColor: 'black', color: 'orange', border: '1px solid orange' },
-                                            ml: 1
-                                        }}
-                                        onClick={() => handleRemoveFromCart(product)}
-                                    >
-                                        <RemoveIcon sx={{ fontSize: 'small' }} />
-                                    </IconButton>
-                                    <CustomTypography sx={{ ml: 1 }}>({cartItemCount})</CustomTypography>
-                                </>
+                                <CustomTypography sx={{ ml: 1 }}>({cartItemCount})</CustomTypography>
                             )}
-                        </Box>
-                    </Box>
+                        </Grid>
+                    </Grid>
                 )
             })}
-            <CustomButton onClick={sendOrder} href={`https://wa.me/5492281407590/?text=${encodeURIComponent(finalOrder)}`} target="_blank" rel="noopener noreferrer">
-                Enviar orden
-            </CustomButton>
+            {cart.length > 0 && (
+                <>
+                    <CustomButton sx={{ display: 'flex', margin: 'auto', width: 'auto', mt: 4 }} onClick={continueWithPurchase}>
+                        Continuar con el pedido
+                    </CustomButton>
+                    <Box>
+                        {openModal && (
+                            <Modal
+                                open={openModal}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <Box sx={{
+                                    ...isMobileDevice ? { width: '90vw' } : { width: '40vw' },
+                                    height: 'auto',
+                                    border: '2px solid orange',
+                                    borderRadius: '10px',
+                                    backgroundColor: 'black'
+                                }}>
+                                    <Box sx={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                                    }}>
+                                        <CustomTypography sx={{ ml: 1 }}>
+                                            Finalizar pedido
+                                        </CustomTypography>
+                                        <IconButton onClick={() => setOpenModal(false)}>
+                                            <CloseIcon sx={{ color: 'orange' }} />
+                                        </IconButton>
+                                    </Box>
+                                    <Formik
+                                        enableReinitialize
+                                        validationSchema={validationSchema}
+                                        initialValues={initialValues}
+                                        onSubmit={values => {
+                                            console.log('values - ', values)
+                                        }}
+                                    >
+                                        {({ handleSubmit, handleChange, values, touched, errors }) => (
+                                            <Grid container direction="column">
+                                                <Grid item xs={12} mt={2} width="99%">
+                                                    <Grid container spacing={2} direction="row" px="10%" alignItems="center" justifyContent="center">
+                                                        <Grid item xs={12}>
+                                                            <CssTextField
+                                                                fullWidth
+                                                                id="fullName"
+                                                                name="fullName"
+                                                                label="Nombre y Apellido"
+                                                                value={values.fullName}
+                                                                onChange={handleChange}
+                                                                error={touched.fullName && Boolean(errors.fullName)}
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={12}>
+                                                            <CssTextField
+                                                                fullWidth
+                                                                id="address"
+                                                                name="address"
+                                                                label="Dirección"
+                                                                value={values.address}
+                                                                onChange={handleChange}
+                                                                error={touched.address && Boolean(errors.address)}
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={12}>
+                                                            <FormControl>
+                                                                <CssSelect
+                                                                    fullWidth
+                                                                    id="paymentMethod"
+                                                                    name="paymentMethod"
+                                                                    label="Forma de pago"
+                                                                    value={values.paymentMethod}
+                                                                    onChange={handleChange}
+                                                                    error={touched.paymentMethod && Boolean(errors.paymentMethod)}
+                                                                    displayEmpty
+                                                                >
+                                                                    <MenuItem value=""> Forma de pago </MenuItem>
+                                                                    <MenuItem value={'Efectivo'}>Efectivo</MenuItem>
+                                                                    <MenuItem value={'Transferencia'}>Transferencia (Cuenta DNI, MercadoPago, etc)</MenuItem>
+                                                                </CssSelect>
+                                                            </FormControl>
+                                                        </Grid>
+                                                        <Grid item xs={12}>
+                                                            <CssTextField
+                                                                fullWidth
+                                                                id="message"
+                                                                name="message"
+                                                                label="Comentarios adicionales"
+                                                                value={values.message}
+                                                                onChange={handleChange}
+                                                                error={touched.message && Boolean(errors.message)}
+                                                                helperText={touched.message && errors.message}
+                                                            />
+                                                        </Grid>
+                                                        <Grid item xs={12} sx={{ textAlign: 'center', mt: 2, mb: 2 }}>
+                                                            <CustomButton sx={{ display: 'flex', margin: 'auto' }}
+                                                                onClick={handleSubmit}>
+                                                                Enviar orden
+                                                            </CustomButton>
+                                                        </Grid>
+                                                    </Grid>
+                                                </Grid>
+                                            </Grid>
+                                        )}
+                                    </Formik>
+                                </Box>
+                            </Modal>
+                        )}
+                    </Box>
+                </>
+
+            )}
         </Box>
     )
 }

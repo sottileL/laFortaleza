@@ -1,0 +1,14 @@
+@font-face {
+    font-family: 'Aeonik';
+    src: url('AEONIK-BLACK.OTF') format('OTF'),
+        url('AEONIK-BLACK.OTF') format('OTF');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+.fs-emeric {
+    font-family: "'Aeonik'";
+    font-weight: bold;
+    font-style: normal;
+}
