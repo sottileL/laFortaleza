@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 
 import filter from 'lodash/filter'
+import get from 'lodash/get'
 import map from 'lodash/map'
 import findIndex from 'lodash/findIndex'
 import join from 'lodash/join'
@@ -98,6 +99,7 @@ function ProductList () {
 
     const [cart, setCart] = useState([])
     const [finalOrder, setFinalOrder] = useState('')
+    const [personInfo, setPersonInfo] = useState('')
     const [openModal, setOpenModal] = useState(false)
 
     const sendOrder = () => {
@@ -121,13 +123,6 @@ function ProductList () {
         setOpenModal(true)
     }
 
-    const handleClickAway = () => {
-        console.log('clickAway')
-        if (openModal) {
-            setOpenModal(false)
-        }
-    }
-
     const initialValues = {
         fullName: '',
         paymentMethod: '',
@@ -142,11 +137,10 @@ function ProductList () {
     })
 
     const handleSubmit = (values, { setSubmitting }) => {
-        // Do something with the form values, such as submit them to a server
-        console.log(values)
-        // Set submitting to false when the submission is complete
-        setSubmitting(false)
-        // Close the modal
+        setFinalOrder(join(map(cart, item => `${item.name} - $${item.price}`), '\n'))
+        setPersonInfo(`'\n' Nombre: ${get(values, 'fullName')} Forma de pago: ${get(values, 'paymentMethod')} '\n', Retira por el local: ${get(values, 'takeAway')} Dirección: ${get(values, 'address')}`)
+        console.log(finalOrder, personInfo, cart)
+        // setSubmitting(false)
         setOpenModal(false)
     }
 
@@ -230,9 +224,7 @@ function ProductList () {
                                         enableReinitialize
                                         validationSchema={validationSchema}
                                         initialValues={initialValues}
-                                        onSubmit={values => {
-                                            console.log('values - ', values)
-                                        }}
+                                        onSubmit={handleSubmit}
                                     >
                                         {({ handleSubmit, handleChange, values, touched, errors }) => (
                                             <Grid container direction="column">
@@ -279,6 +271,24 @@ function ProductList () {
                                                             </FormControl>
                                                         </Grid>
                                                         <Grid item xs={12}>
+                                                            <FormControl>
+                                                                <CssSelect
+                                                                    fullWidth
+                                                                    id="takeAway"
+                                                                    name="takeAway"
+                                                                    label="Retiro por el local"
+                                                                    value={values.takeAway}
+                                                                    onChange={handleChange}
+                                                                    error={touched.takeAway && Boolean(errors.takeAway)}
+                                                                    displayEmpty
+                                                                >
+                                                                    <MenuItem value=""> Retiro por el local? </MenuItem>
+                                                                    <MenuItem value={'Si'}>Si</MenuItem>
+                                                                    <MenuItem value={'No'}>No</MenuItem>
+                                                                </CssSelect>
+                                                            </FormControl>
+                                                        </Grid>
+                                                        <Grid item xs={12}>
                                                             <CssTextField
                                                                 fullWidth
                                                                 id="message"
@@ -287,13 +297,12 @@ function ProductList () {
                                                                 value={values.message}
                                                                 onChange={handleChange}
                                                                 error={touched.message && Boolean(errors.message)}
-                                                                helperText={touched.message && errors.message}
                                                             />
                                                         </Grid>
                                                         <Grid item xs={12} sx={{ textAlign: 'center', mt: 2, mb: 2 }}>
                                                             <CustomButton sx={{ display: 'flex', margin: 'auto' }}
                                                                 onClick={handleSubmit}>
-                                                                Enviar orden
+                                                                    Enviar pedido
                                                             </CustomButton>
                                                         </Grid>
                                                     </Grid>
